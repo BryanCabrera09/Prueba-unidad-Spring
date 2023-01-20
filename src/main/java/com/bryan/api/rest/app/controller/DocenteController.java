@@ -4,6 +4,7 @@ import com.bryan.api.rest.app.entity.Docente;
 import com.bryan.api.rest.app.service.IDocenteService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -26,7 +27,12 @@ public class DocenteController {
 
 	@GetMapping("/listar")
 	public ResponseEntity<List<Docente>> obtenerLista() {
-		return new ResponseEntity<>(docenteService.findByAll(), HttpStatus.OK);
+
+		try {
+			return new ResponseEntity<>(docenteService.findByAll(), HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@GetMapping("/buscar/{id}")
@@ -40,13 +46,25 @@ public class DocenteController {
 
 	@PostMapping("/crear")
 	public ResponseEntity<Docente> crear(@RequestBody Docente d) {
-		return new ResponseEntity<>(docenteService.save(d), HttpStatus.CREATED);
+
+		try {
+			return new ResponseEntity<>(docenteService.save(d), HttpStatus.CREATED);
+		} catch (Exception e) {
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@DeleteMapping("/eliminar/{id}")
-	public ResponseEntity<Docente> eliminar(@PathVariable Integer id) {
-		docenteService.delete(id);
-		return new ResponseEntity<>(HttpStatus.OK);
+	public ResponseEntity<?> eliminar(@PathVariable Integer id) {
+		try {
+			docenteService.delete(id);
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		} catch (DataIntegrityViolationException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body("Error al elminar el docente");
+		} catch (Exception e) {
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@PutMapping("/actualizar/{id}")

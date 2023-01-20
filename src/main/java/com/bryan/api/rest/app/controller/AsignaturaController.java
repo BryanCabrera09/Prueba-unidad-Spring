@@ -3,6 +3,7 @@ package com.bryan.api.rest.app.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -28,7 +29,11 @@ public class AsignaturaController {
 
 	@GetMapping("/listar")
 	public ResponseEntity<List<Asignatura>> obtenerLista() {
-		return new ResponseEntity<>(asignaturaService.findByAll(), HttpStatus.OK);
+		try {
+			return new ResponseEntity<>(asignaturaService.findByAll(), HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@GetMapping("/buscar/{id}")
@@ -42,13 +47,24 @@ public class AsignaturaController {
 
 	@PostMapping("/crear")
 	public ResponseEntity<Asignatura> crear(@RequestBody Asignatura c) {
-		return new ResponseEntity<>(asignaturaService.save(c), HttpStatus.CREATED);
+		try {
+			return new ResponseEntity<>(asignaturaService.save(c), HttpStatus.CREATED);
+		} catch (Exception e) {
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@DeleteMapping("/eliminar/{id}")
-	public ResponseEntity<Asignatura> eliminar(@PathVariable Integer id) {
-		asignaturaService.delete(id);
-		return new ResponseEntity<>(HttpStatus.OK);
+	public ResponseEntity<?> eliminar(@PathVariable Integer id) {
+
+		try {
+			asignaturaService.delete(id);
+			return new ResponseEntity<>(HttpStatus.OK);
+		} catch (DataIntegrityViolationException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error al elminar la asignatura");
+		} catch (Exception e) {
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@PutMapping("/actualizar/{id}")
